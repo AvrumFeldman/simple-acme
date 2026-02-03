@@ -191,45 +191,51 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
                 var timeoutSeconds = webhookSettings.TimeoutSeconds ?? 30;
                 client.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
 
-                // Build request
-                var request = new HttpRequestMessage(method, url);
+                // Send request with retry logic
+                var maxRetries = webhookSettings.MaxRetries ?? 3;
+                var retryDelaySeconds = webhookSettings.RetryDelaySeconds ?? 30;
 
-                // Add authentication
-                await AddAuthenticationAsync(request, webhookSettings);
-
-                // Add custom headers
-                if (webhookSettings.CustomHeaders != null)
-                {
-                    foreach (var header in webhookSettings.CustomHeaders)
-                    {
-                        request.Headers.TryAddWithoutValidation(header.Key, header.Value);
-                    }
-                }
-
-                // Add standard headers
-                request.Headers.Add("X-Webhook-ID", payload.EventId);
-                request.Headers.Add("X-Webhook-Timestamp", new DateTimeOffset(payload.Timestamp).ToUnixTimeSeconds().ToString());
-                request.Headers.Add("User-Agent", $"simple-acme/{VersionService.SoftwareVersion}");
-
-                // Add payload for POST requests
+                // Prepare JSON payload once for all attempts
+                string? jsonPayload = null;
                 if (method == HttpMethod.Post)
                 {
-                    var jsonPayload = JsonSerializer.Serialize(payload, new JsonSerializerOptions
+                    jsonPayload = JsonSerializer.Serialize(payload, new JsonSerializerOptions
                     {
                         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                         WriteIndented = false
                     });
-                    request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
                 }
-
-                // Send request with retry logic
-                var maxRetries = webhookSettings.MaxRetries ?? 3;
-                var retryDelaySeconds = webhookSettings.RetryDelaySeconds ?? 30;
 
                 for (int attempt = 1; attempt <= maxRetries + 1; attempt++)
                 {
                     try
                     {
+                        // Create a new request for each attempt
+                        using var request = new HttpRequestMessage(method, url);
+
+                        // Add authentication
+                        await AddAuthenticationAsync(request, webhookSettings);
+
+                        // Add custom headers
+                        if (webhookSettings.CustomHeaders != null)
+                        {
+                            foreach (var header in webhookSettings.CustomHeaders)
+                            {
+                                request.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                            }
+                        }
+
+                        // Add standard headers
+                        request.Headers.Add("X-Webhook-ID", payload.EventId);
+                        request.Headers.Add("X-Webhook-Timestamp", new DateTimeOffset(payload.Timestamp).ToUnixTimeSeconds().ToString());
+                        request.Headers.Add("User-Agent", $"simple-acme/{VersionService.SoftwareVersion}");
+
+                        // Add payload for POST requests
+                        if (jsonPayload != null)
+                        {
+                            request.Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                        }
+
                         _log.Verbose($"Sending webhook to {url} (attempt {attempt}/{maxRetries + 1})");
                         var response = await client.SendAsync(request);
 
@@ -363,9 +369,9 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Return empty list on error
+                _log.Debug("Error retrieving hosts for webhook notification: {message}", ex.Message);
             }
             return hosts.Distinct().ToList();
         }
@@ -384,8 +390,9 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
                     { "Installation", string.Join(", ", renewal.InstallationPluginOptions.Select(x => _plugin.GetPlugin(x).Name)) }
                 };
             }
-            catch
+            catch (Exception ex)
             {
+                _log.Debug("Error retrieving plugin information for webhook notification: {message}", ex.Message);
                 return new Dictionary<string, string>();
             }
         }
