@@ -11,6 +11,7 @@ namespace PKISharp.WACS.Configuration.Settings
         private readonly ILogService _log;
         private readonly FolderHelpers _folderHelpers;
         private readonly MainArguments? _arguments;
+        private readonly NotificationArguments? _notificationArguments;
         private InheritSettings _settings = new();
         public ISettings Current => _settings;
 
@@ -25,6 +26,7 @@ namespace PKISharp.WACS.Configuration.Settings
             }
 
             _arguments = parser.GetArguments<MainArguments>();
+            _notificationArguments = parser.GetArguments<NotificationArguments>();
             if (_arguments == null)
             {
                 return;
@@ -46,6 +48,10 @@ namespace PKISharp.WACS.Configuration.Settings
                 return;
             }
             var serverSettings = LoadServerSettings();
+            
+            // Merge notification arguments with settings
+            MergeNotificationArguments();
+            
             try
             {
                 if (serverSettings)
@@ -207,6 +213,123 @@ namespace PKISharp.WACS.Configuration.Settings
                 _log.Error("Setting Acme.DefaultBaseUri is unspecified or invalid, please specify a valid absolute URI");
                 throw new Exception();
             }
+        }
+
+        /// <summary>
+        /// Merge notification command-line arguments with settings
+        /// </summary>
+        private void MergeNotificationArguments()
+        {
+            if (_notificationArguments == null)
+            {
+                return;
+            }
+
+            // Check if any notification arguments were provided
+            var hasNotificationArgs = 
+                _notificationArguments.SmtpServer != null ||
+                _notificationArguments.SmtpPort != null ||
+                _notificationArguments.SmtpUser != null ||
+                _notificationArguments.SmtpPassword != null ||
+                _notificationArguments.SmtpSecure != null ||
+                _notificationArguments.EmailSenderName != null ||
+                _notificationArguments.EmailSender != null ||
+                _notificationArguments.EmailReceiver != null ||
+                _notificationArguments.EmailOnSuccess != null ||
+                _notificationArguments.WebhookUrl != null ||
+                _notificationArguments.WebhookHttpMethod != null ||
+                _notificationArguments.WebhookAuthMethod != null ||
+                _notificationArguments.WebhookBearerToken != null ||
+                _notificationArguments.WebhookBasicUsername != null ||
+                _notificationArguments.WebhookBasicPassword != null ||
+                _notificationArguments.WebhookApiKey != null ||
+                _notificationArguments.WebhookApiKeyHeader != null ||
+                _notificationArguments.WebhookTimeoutSeconds != null ||
+                _notificationArguments.WebhookMaxRetries != null ||
+                _notificationArguments.WebhookRetryDelaySeconds != null ||
+                _notificationArguments.NotificationComputerName != null;
+
+            if (!hasNotificationArgs)
+            {
+                return;
+            }
+
+            // Create notification settings from command-line arguments
+            var notificationSettings = new Types.NotificationSettings();
+
+            if (_notificationArguments.SmtpServer != null)
+                notificationSettings.SmtpServer = _notificationArguments.SmtpServer;
+            if (_notificationArguments.SmtpPort != null)
+                notificationSettings.SmtpPort = _notificationArguments.SmtpPort;
+            if (_notificationArguments.SmtpUser != null)
+                notificationSettings.SmtpUser = _notificationArguments.SmtpUser;
+            if (_notificationArguments.SmtpPassword != null)
+                notificationSettings.SmtpPassword = _notificationArguments.SmtpPassword;
+            if (_notificationArguments.SmtpSecure != null)
+                notificationSettings.SmtpSecure = _notificationArguments.SmtpSecure;
+            if (_notificationArguments.EmailSenderName != null)
+                notificationSettings.SenderName = _notificationArguments.EmailSenderName;
+            if (_notificationArguments.EmailSender != null)
+                notificationSettings.SenderAddress = _notificationArguments.EmailSender;
+            if (_notificationArguments.EmailReceiver != null)
+            {
+                // Split comma-separated email addresses
+                var receivers = _notificationArguments.EmailReceiver.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                notificationSettings.ReceiverAddresses = [..receivers];
+            }
+            if (_notificationArguments.EmailOnSuccess != null)
+                notificationSettings.EmailOnSuccess = _notificationArguments.EmailOnSuccess;
+            if (_notificationArguments.NotificationComputerName != null)
+                notificationSettings.ComputerName = _notificationArguments.NotificationComputerName;
+
+            // Webhook settings
+            if (_notificationArguments.WebhookUrl != null ||
+                _notificationArguments.WebhookHttpMethod != null ||
+                _notificationArguments.WebhookAuthMethod != null ||
+                _notificationArguments.WebhookBearerToken != null ||
+                _notificationArguments.WebhookBasicUsername != null ||
+                _notificationArguments.WebhookBasicPassword != null ||
+                _notificationArguments.WebhookApiKey != null ||
+                _notificationArguments.WebhookApiKeyHeader != null ||
+                _notificationArguments.WebhookTimeoutSeconds != null ||
+                _notificationArguments.WebhookMaxRetries != null ||
+                _notificationArguments.WebhookRetryDelaySeconds != null)
+            {
+                notificationSettings.Webhook = new Types.WebhookSettings();
+                
+                if (_notificationArguments.WebhookUrl != null)
+                    notificationSettings.Webhook.WebhookUrl = _notificationArguments.WebhookUrl;
+                if (_notificationArguments.WebhookHttpMethod != null)
+                    notificationSettings.Webhook.HttpMethod = _notificationArguments.WebhookHttpMethod;
+                if (_notificationArguments.WebhookAuthMethod != null)
+                    notificationSettings.Webhook.AuthMethod = _notificationArguments.WebhookAuthMethod;
+                if (_notificationArguments.WebhookBearerToken != null)
+                    notificationSettings.Webhook.BearerToken = _notificationArguments.WebhookBearerToken;
+                if (_notificationArguments.WebhookBasicUsername != null)
+                    notificationSettings.Webhook.BasicAuthUsername = _notificationArguments.WebhookBasicUsername;
+                if (_notificationArguments.WebhookBasicPassword != null)
+                    notificationSettings.Webhook.BasicAuthPassword = _notificationArguments.WebhookBasicPassword;
+                if (_notificationArguments.WebhookApiKey != null)
+                    notificationSettings.Webhook.ApiKey = _notificationArguments.WebhookApiKey;
+                if (_notificationArguments.WebhookApiKeyHeader != null)
+                    notificationSettings.Webhook.ApiKeyHeader = _notificationArguments.WebhookApiKeyHeader;
+                if (_notificationArguments.WebhookTimeoutSeconds != null)
+                    notificationSettings.Webhook.TimeoutSeconds = _notificationArguments.WebhookTimeoutSeconds;
+                if (_notificationArguments.WebhookMaxRetries != null)
+                    notificationSettings.Webhook.MaxRetries = _notificationArguments.WebhookMaxRetries;
+                if (_notificationArguments.WebhookRetryDelaySeconds != null)
+                    notificationSettings.Webhook.RetryDelaySeconds = _notificationArguments.WebhookRetryDelaySeconds;
+            }
+
+            // Create a new Settings object with only notification settings
+            var argumentSettings = new Settings
+            {
+                Notification = notificationSettings
+            };
+
+            // Merge with existing settings (command-line arguments take precedence)
+            _settings = _settings.MergeTyped(argumentSettings);
+            _log.Verbose("Merged notification command-line arguments with settings");
         }
 
     }

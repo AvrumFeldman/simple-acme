@@ -44,6 +44,7 @@ namespace PKISharp.WACS.Services
                 // Arguments
                 new(typeof(Configuration.Arguments.MainArguments)),
                 new(typeof(Configuration.Arguments.AccountArguments)),
+                new(typeof(Configuration.Arguments.NotificationArguments)),
   
                 // Target plugins
                 new(typeof(Plugins.TargetPlugins.Csr)), new(typeof(Plugins.TargetPlugins.CsrArguments)),
