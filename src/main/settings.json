@@ -63,7 +63,21 @@
     "SenderAddress": null,
     "ReceiverAddresses": [],
     "EmailOnSuccess": false,
-    "ComputerName": null
+    "ComputerName": null,
+    "Webhook": {
+      "WebhookUrl": null,
+      "HttpMethod": "POST",
+      "AuthMethod": "none",
+      "BearerToken": null,
+      "BasicAuthUsername": null,
+      "BasicAuthPassword": null,
+      "ApiKey": null,
+      "ApiKeyHeader": "X-API-Key",
+      "CustomHeaders": null,
+      "TimeoutSeconds": 30,
+      "MaxRetries": 3,
+      "RetryDelaySeconds": 30
+    }
   },
   "Security": {
     "EncryptConfig": true,

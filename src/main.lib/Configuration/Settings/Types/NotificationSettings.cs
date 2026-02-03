@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace PKISharp.WACS.Configuration.Settings.Types
 {
@@ -76,6 +77,11 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         /// of authenticated SMTP.
         /// </summary>
         string? SmtpUser { get; }
+
+        /// <summary>
+        /// Webhook notification settings
+        /// </summary>
+        IWebhookSettings Webhook { get; }
     }
 
     internal class InheritNotificationSettings(params IEnumerable<NotificationSettings?> chain) : InheritSettings<NotificationSettings>(chain), INotificationSettings
@@ -91,6 +97,7 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         public int SmtpSecureMode => Get(x => x.SmtpSecureMode) ?? 1;
         public string? SmtpServer => Get(x => x.SmtpServer);
         public string? SmtpUser => Get(x => x.SmtpUser);
+        public IWebhookSettings Webhook => new InheritWebhookSettings(chain.Select(x => x?.Webhook));
     }
 
     public class NotificationSettings
@@ -162,5 +169,8 @@ namespace PKISharp.WACS.Configuration.Settings.Types
 
         [SettingsValue(Description = "This value replaces the computer machine name reported in emails.")]
         public string? ComputerName { get; set; }
+
+        [SettingsValue(Description = "Webhook notification settings.")]
+        public WebhookSettings? Webhook { get; set; }
     }
 }
