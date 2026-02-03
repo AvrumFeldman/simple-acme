@@ -14,7 +14,7 @@ To enable script notifications, add the following to your `settings.json`:
 {
   "Notification": {
     "Script": "/path/to/your/notification-script.ps1",
-    "ScriptParameters": "--event-type {EventType} --renewal-id {RenewalId} --friendly-name {FriendlyName} --errors {Errors} --log {Log}"
+    "ScriptParameters": "-EventType {EventType} -RenewalId {RenewalId} -FriendlyName {FriendlyName} -Errors {Errors} -Log {Log}"
   }
 }
 ```
@@ -54,10 +54,12 @@ Usage:
 {
   "Notification": {
     "Script": "C:\\path\\to\\notification-script.ps1",
-    "ScriptParameters": "{EventType} {RenewalId} {FriendlyName} {Errors} {Log}"
+    "ScriptParameters": "-EventType {EventType} -RenewalId {RenewalId} -FriendlyName {FriendlyName} -Errors {Errors} -Log {Log}"
   }
 }
 ```
+
+PowerShell parameters should use named parameters with the `-ParameterName` syntax.
 
 ### Bash Example
 
@@ -72,6 +74,8 @@ Usage:
   }
 }
 ```
+
+Bash parameters should use named flags with the `--flag-name` syntax as shown in the example script.
 
 ## Custom Integration Examples
 
