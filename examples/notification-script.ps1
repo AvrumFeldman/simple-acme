@@ -28,7 +28,9 @@ if ($Errors) {
 }
 
 if ($Log) {
-    $logEntry += "`n`nLog Output (truncated):`n$($Log.Substring(0, [Math]::Min(500, $Log.Length)))"
+    # Truncate log to first 500 characters if it's too long
+    $truncatedLog = if ($Log.Length -gt 500) { $Log.Substring(0, 500) + "..." } else { $Log }
+    $logEntry += "`n`nLog Output:`n$truncatedLog"
 }
 
 $logEntry += "`n" + ("-" * 80) + "`n"

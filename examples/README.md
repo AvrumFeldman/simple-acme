@@ -19,7 +19,7 @@ To enable script notifications, add the following to your `settings.json`:
 }
 ```
 
-**Note**: The settings.json template includes these properties, but VSCode may show a validation warning because the remote JSON schema at simple-acme.com has not been updated yet. You can safely ignore this warning - the properties are valid and will work correctly.
+**Note**: The settings.json template includes these properties, but VS Code may show a validation warning because the remote JSON schema at simple-acme.com has not been updated yet. You can safely ignore this warning - the properties are valid and will work correctly.
 
 ### Available Tokens
 
