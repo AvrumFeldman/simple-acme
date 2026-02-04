@@ -26,6 +26,7 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
             _client = client;
             _settings = settings;
             _secretServiceManager = secretServiceManager;
+            _log.Verbose("NotificationTargetScript initialized. Script configured: {enabled}", Enabled);
         }
 
         /// <summary>
@@ -84,9 +85,10 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
         /// </summary>
         public async Task SendTest()
         {
+            _log.Verbose("NotificationTargetScript.SendTest() called. Enabled: {enabled}", Enabled);
             if (!Enabled)
             {
-                _log.Error("Script notifications not enabled. Configure Notification.Script in settings.json to enable this.");
+                _log.Information("Script notifications not configured.");
             }
             else
             {
@@ -143,19 +145,27 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
             var replacements = new Dictionary<string, string?>
             {
                 { "EventType", eventType },
-                { "RenewalId", renewal?.Id },
-                { "FriendlyName", renewal?.LastFriendlyName }
+                { "RenewalId", renewal?.Id ?? "" },
+                { "FriendlyName", renewal?.LastFriendlyName ?? "" }
             };
 
             if (errors != null)
             {
                 replacements["Errors"] = string.Join("; ", errors);
             }
+            else
+            {
+                replacements["Errors"] = "";
+            }
 
             if (log != null)
             {
                 var logText = string.Join("\n", log.Select(x => $"{x.Level}: {x.Message}"));
                 replacements["Log"] = logText;
+            }
+            else
+            {
+                replacements["Log"] = "";
             }
 
             return await ScriptClient.ReplaceTokens(input, replacements, _secretServiceManager, censor);
