@@ -1,13 +1,14 @@
 #!/usr/bin/env pwsh
 # Example notification script for simple-acme
 # This script receives notification events from simple-acme and logs them to a file
+# Parameters are passed positionally: EventType, RenewalId, FriendlyName, Errors, Log
 
 param(
-    [string]$EventType,
-    [string]$RenewalId,
-    [string]$FriendlyName,
-    [string]$Errors,
-    [string]$Log
+    [string]$EventType = "unknown",
+    [string]$RenewalId = "",
+    [string]$FriendlyName = "",
+    [string]$Errors = "",
+    [string]$Log = ""
 )
 
 # Configuration
@@ -27,7 +28,7 @@ if ($Errors) {
 }
 
 if ($Log) {
-    $logEntry += "`n`nLog Output:`n$Log"
+    $logEntry += "`n`nLog Output (truncated):`n$($Log.Substring(0, [Math]::Min(500, $Log.Length)))"
 }
 
 $logEntry += "`n" + ("-" * 80) + "`n"

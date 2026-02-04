@@ -14,10 +14,12 @@ To enable script notifications, add the following to your `settings.json`:
 {
   "Notification": {
     "Script": "/path/to/your/notification-script.ps1",
-    "ScriptParameters": "-EventType {EventType} -RenewalId {RenewalId} -FriendlyName {FriendlyName} -Errors {Errors} -Log {Log}"
+    "ScriptParameters": "{EventType} {RenewalId} {FriendlyName}"
   }
 }
 ```
+
+**Note**: The settings.json template includes these properties, but VSCode may show a validation warning because the remote JSON schema at simple-acme.com has not been updated yet. You can safely ignore this warning - the properties are valid and will work correctly.
 
 ### Available Tokens
 
@@ -54,12 +56,12 @@ Usage:
 {
   "Notification": {
     "Script": "C:\\path\\to\\notification-script.ps1",
-    "ScriptParameters": "-EventType {EventType} -RenewalId {RenewalId} -FriendlyName {FriendlyName} -Errors {Errors} -Log {Log}"
+    "ScriptParameters": "{EventType} {RenewalId} {FriendlyName}"
   }
 }
 ```
 
-PowerShell parameters should use named parameters with the `-ParameterName` syntax.
+**Important**: Use positional parameters (without parameter names) to avoid issues with empty values. PowerShell scripts should define parameters with default values to handle empty strings gracefully.
 
 ### Bash Example
 
@@ -70,12 +72,12 @@ Usage:
 {
   "Notification": {
     "Script": "/path/to/notification-script.sh",
-    "ScriptParameters": "--event-type {EventType} --renewal-id {RenewalId} --friendly-name {FriendlyName} --errors {Errors} --log {Log}"
+    "ScriptParameters": "{EventType} {RenewalId} {FriendlyName}"
   }
 }
 ```
 
-Bash parameters should use named flags with the `--flag-name` syntax as shown in the example script.
+Bash scripts receive parameters as positional arguments ($1, $2, $3, etc.).
 
 ## Custom Integration Examples
 
@@ -123,15 +125,22 @@ logger -t simple-acme "Certificate notification: $EVENT_TYPE for $FRIENDLY_NAME 
 
 To test your notification script configuration:
 
+### Interactive Mode
 ```bash
-# Linux/macOS
-./wacs --test --notify
-
-# Windows
-wacs.exe --test --notify
+# Start the application and select "More Options" (O), then "Test notification" (E)
+wacs
 ```
 
-This will trigger a test notification event with `{EventType}` set to "test".
+### Command Line Mode
+```bash
+# Test notification without interactive menu
+wacs --testnotification --closeonfinish
+
+# On Linux/macOS, if using PowerShell scripts, ensure pwsh is installed and configured
+# In settings.json, set: "Script": { "PowershellExecutablePath": "pwsh" }
+```
+
+This will trigger a test notification event with `{EventType}` set to "test" and empty values for other parameters.
 
 ## Script Exit Codes
 

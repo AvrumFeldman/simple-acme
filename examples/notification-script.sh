@@ -1,35 +1,14 @@
 #!/bin/bash
 # Example notification script for simple-acme
 # This script receives notification events from simple-acme and logs them to a file
+# Parameters are passed positionally: $1=EventType, $2=RenewalId, $3=FriendlyName, $4=Errors, $5=Log
 
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --event-type)
-            EVENT_TYPE="$2"
-            shift 2
-            ;;
-        --renewal-id)
-            RENEWAL_ID="$2"
-            shift 2
-            ;;
-        --friendly-name)
-            FRIENDLY_NAME="$2"
-            shift 2
-            ;;
-        --errors)
-            ERRORS="$2"
-            shift 2
-            ;;
-        --log)
-            LOG="$2"
-            shift 2
-            ;;
-        *)
-            shift
-            ;;
-    esac
-done
+# Read positional parameters
+EVENT_TYPE="${1:-unknown}"
+RENEWAL_ID="${2:-}"
+FRIENDLY_NAME="${3:-}"
+ERRORS="${4:-}"
+LOG="${5:-}"
 
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
