@@ -218,7 +218,17 @@ namespace PKISharp.WACS.Clients
         {
             var expandedScriptPath = Environment.ExpandEnvironmentVariables(script);
             // Convert to absolute path if it's a relative path
-            var absoluteScriptPath = new FileInfo(expandedScriptPath).FullName;
+            string absoluteScriptPath;
+            try
+            {
+                absoluteScriptPath = new FileInfo(expandedScriptPath).FullName;
+            }
+            catch (Exception ex)
+            {
+                logService.Error("Invalid script path {path}: {message}", script, ex.Message);
+                throw;
+            }
+            
             var actualScript = absoluteScriptPath;
             var actualParameters = parameters;
             if (actualScript.EndsWith(".ps1"))
