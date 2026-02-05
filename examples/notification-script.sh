@@ -27,6 +27,14 @@ Errors: $ERRORS"
 fi
 
 if [ -n "$LOG" ]; then
+    # Try to decode base64 if possible
+    if command -v base64 >/dev/null 2>&1; then
+        DECODED_LOG=$(echo "$LOG" | base64 -d 2>/dev/null || echo "$LOG" | base64 -D 2>/dev/null)
+        if [ -n "$DECODED_LOG" ]; then
+            LOG="$DECODED_LOG"
+        fi
+    fi
+
     LOG_ENTRY="$LOG_ENTRY
 
 Log Output:

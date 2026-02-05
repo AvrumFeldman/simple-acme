@@ -28,6 +28,13 @@ if ($Errors) {
 }
 
 if ($Log) {
+    try {
+        $decodedBytes = [System.Convert]::FromBase64String($Log)
+        $Log = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
+    } catch {
+        # Fallback for plain text or invalid base64
+    }
+
     # Truncate log to first 500 characters if it's too long
     $truncatedLog = if ($Log.Length -gt 500) { $Log.Substring(0, 500) + "..." } else { $Log }
     $logEntry += "`n`nLog Output:`n$truncatedLog"

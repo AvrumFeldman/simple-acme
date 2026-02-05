@@ -144,28 +144,28 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
         {
             var replacements = new Dictionary<string, string?>
             {
-                { "EventType", eventType },
-                { "RenewalId", renewal?.Id ?? "" },
-                { "FriendlyName", renewal?.LastFriendlyName ?? "" }
+                { "EventType", $"\"{eventType}\"" },
+                { "RenewalId", $"\"{renewal?.Id ?? ""}\"" },
+                { "FriendlyName", $"\"{renewal?.LastFriendlyName ?? ""}\"" }
             };
 
             if (errors != null)
             {
-                replacements["Errors"] = string.Join("; ", errors);
+                replacements["Errors"] = $"\"{string.Join("; ", errors)}\"";
             }
             else
             {
-                replacements["Errors"] = "";
+                replacements["Errors"] = "\"\"";
             }
 
             if (log != null)
             {
                 var logText = string.Join("\n", log.Select(x => $"{x.Level}: {x.Message}"));
-                replacements["Log"] = logText;
+                replacements["Log"] = $"\"{System.Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(logText))}\"";
             }
             else
             {
-                replacements["Log"] = "";
+                replacements["Log"] = "\"\"";
             }
 
             return await ScriptClient.ReplaceTokens(input, replacements, _secretServiceManager, censor);
