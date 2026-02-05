@@ -384,8 +384,6 @@ namespace PKISharp.WACS
                     await renewalStore.Save(renewal, result);
                 }
                 exceptionHandler.HandleException(message: $"Create certificate failed");
-                // Send failure notification
-                await notification.NotifyFailure(runLevel, renewal, result, log.Lines);
             }
             else
             {
