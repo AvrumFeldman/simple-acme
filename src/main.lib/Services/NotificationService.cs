@@ -10,34 +10,13 @@ namespace PKISharp.WACS.Services
 {
     internal class NotificationService
     {
-        private readonly ILogService _log;
-        private readonly IEnumerable<INotificationTarget> _targets;
-        private readonly ISettings _settings;
-
-        public NotificationService(
-            ILifetimeScope scope,
-            ILogService log,
-            IPluginService pluginService,
-            ISettings settings)
-        {
-            _log = log;
-            _settings = settings;
-            _targets = pluginService.
-                    GetNotificationTargets().
-                    Select(b => {
-                        log.Verbose("Resolving notification target: {type}", b.Backend.Name);
-                        return scope.Resolve(b.Backend);
-                    }).
-                    OfType<INotificationTarget>().
-                    ToList();
-
-            // Log loaded targets
-            log.Verbose("Notification targets loaded: {count}", _targets.Count());
-            foreach (var target in _targets)
-            {
-                log.Verbose("  - {type}", target.GetType().Name);
-            }
-        }
+        private readonly ILogService _log = log;
+        private readonly IEnumerable<INotificationTarget> _targets = pluginService.
+                GetNotificationTargets().
+                Select(b => scope.Resolve(b.Backend)).
+                OfType<INotificationTarget>().
+                Where(x => x.Enabled).
+                ToList();
 
         /// <summary>
         /// Handle created notification
@@ -50,7 +29,7 @@ namespace PKISharp.WACS.Services
                 LogType.All, 
                 "Certificate {friendlyName} created", 
                 renewal.LastFriendlyName);
-            if (_settings.Notification.EmailOnSuccess)
+            if (settings.Notification.NotifyOnSuccess)
             {
                 foreach (var target in _targets) {
                     try
@@ -77,7 +56,7 @@ namespace PKISharp.WACS.Services
                 LogType.All, 
                 "Renewal for {friendlyName} succeeded" + (withErrors ? " with errors" : ""),
                 renewal.LastFriendlyName);
-            if (withErrors || _settings.Notification.EmailOnSuccess)
+            if (withErrors || settings.Notification.NotifyOnSuccess)
             {
                 foreach (var target in _targets)
                 {

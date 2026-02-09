@@ -18,7 +18,7 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         /// SmtpServer, SmtpSenderAddressand 
         /// SmtpReceiverAddress have been configured.
         /// </summary>
-        bool EmailOnSuccess { get; }
+        bool NotifyOnSuccess { get; }
 
         /// <summary>
         /// Email addresses to receive notification emails. 
@@ -94,7 +94,7 @@ namespace PKISharp.WACS.Configuration.Settings.Types
     internal class InheritNotificationSettings(params IEnumerable<NotificationSettings?> chain) : InheritSettings<NotificationSettings>(chain), INotificationSettings
     {
         public string? ComputerName => Get(x => x.ComputerName);
-        public bool EmailOnSuccess => Get(x => x.EmailOnSuccess) ?? true;
+        public bool NotifyOnSuccess => Get(x => x.NotifyOnSuccess) ?? true;
         public IEnumerable<string> ReceiverAddresses => Get(x => x.ReceiverAddresses) ?? [];
         public string? SenderAddress => Get(x => x.SenderAddress);
         public string? SenderName => Get(x => x.SenderName);
@@ -173,7 +173,7 @@ namespace PKISharp.WACS.Configuration.Settings.Types
             "renewed, as opposed to the default behavior that only send failure notifications. Only works " +
             "if at least <code>SmtpServer</code>, <code>SmtpSenderAddress</code> and<code>SmtpReceiverAddress</code> " +
             "have been configured.")]
-        public bool? EmailOnSuccess { get; set; }
+        public bool? NotifyOnSuccess { get; set; }
 
         [SettingsValue(Description = "This value replaces the computer machine name reported in emails.")]
         public string? ComputerName { get; set; }

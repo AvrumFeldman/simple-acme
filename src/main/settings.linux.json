@@ -53,7 +53,7 @@
     "SenderName": null,
     "SenderAddress": null,
     "ReceiverAddresses": [],
-    "EmailOnSuccess": false,
+    "NotifyOnSuccess": false,
     "ComputerName": null,
     "Script": null,
     "ScriptParameters": null
