@@ -35,6 +35,8 @@ namespace PKISharp.WACS.Plugins.NotificationPlugins
             _dueDate = dueDate;
         }
 
+        public bool Enabled => _email.Enabled;
+
         /// <summary>
         /// Handle created notification
         /// </summary>

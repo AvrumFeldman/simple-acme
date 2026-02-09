@@ -19,6 +19,7 @@ namespace PKISharp.WACS.Services
                 GetNotificationTargets().
                 Select(b => scope.Resolve(b.Backend)).
                 OfType<INotificationTarget>().
+                Where(x => x.Enabled).
                 ToList();
 
         /// <summary>
