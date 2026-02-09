@@ -32,7 +32,7 @@ namespace PKISharp.WACS.Services
                 LogType.All, 
                 "Certificate {friendlyName} created", 
                 renewal.LastFriendlyName);
-            if (settings.Notification.EmailOnSuccess)
+            if (settings.Notification.NotifyOnSuccess)
             {
                 foreach (var target in _targets) {
                     try
@@ -59,7 +59,7 @@ namespace PKISharp.WACS.Services
                 LogType.All, 
                 "Renewal for {friendlyName} succeeded" + (withErrors ? " with errors" : ""),
                 renewal.LastFriendlyName);
-            if (withErrors || settings.Notification.EmailOnSuccess)
+            if (withErrors || settings.Notification.NotifyOnSuccess)
             {
                 foreach (var target in _targets)
                 {
