@@ -18,7 +18,7 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         /// SmtpServer, SmtpSenderAddressand 
         /// SmtpReceiverAddress have been configured.
         /// </summary>
-        bool EmailOnSuccess { get; }
+        bool NotifyOnSuccess { get; }
 
         /// <summary>
         /// Email addresses to receive notification emails. 
@@ -76,12 +76,25 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         /// of authenticated SMTP.
         /// </summary>
         string? SmtpUser { get; }
+
+        /// <summary>
+        /// Path to external script or program to run for notifications.
+        /// Supported extensions: .ps1, .sh, .exe, .bat, .cmd (Windows only).
+        /// </summary>
+        string? Script { get; }
+
+        /// <summary>
+        /// Parameters for the notification script. May include tokens 
+        /// like {EventType}, {RenewalId}, {FriendlyName}, {Errors}, {Log}, 
+        /// and {vault://json/key} for secrets.
+        /// </summary>
+        string? ScriptParameters { get; }
     }
 
     internal class InheritNotificationSettings(params IEnumerable<NotificationSettings?> chain) : InheritSettings<NotificationSettings>(chain), INotificationSettings
     {
         public string? ComputerName => Get(x => x.ComputerName);
-        public bool EmailOnSuccess => Get(x => x.EmailOnSuccess) ?? true;
+        public bool NotifyOnSuccess => Get(x => x.NotifyOnSuccess) ?? true;
         public IEnumerable<string> ReceiverAddresses => Get(x => x.ReceiverAddresses) ?? [];
         public string? SenderAddress => Get(x => x.SenderAddress);
         public string? SenderName => Get(x => x.SenderName);
@@ -91,6 +104,8 @@ namespace PKISharp.WACS.Configuration.Settings.Types
         public int SmtpSecureMode => Get(x => x.SmtpSecureMode) ?? 1;
         public string? SmtpServer => Get(x => x.SmtpServer);
         public string? SmtpUser => Get(x => x.SmtpUser);
+        public string? Script => Get(x => x.Script);
+        public string? ScriptParameters => Get(x => x.ScriptParameters);
     }
 
     public class NotificationSettings
@@ -158,9 +173,22 @@ namespace PKISharp.WACS.Configuration.Settings.Types
             "renewed, as opposed to the default behavior that only send failure notifications. Only works " +
             "if at least <code>SmtpServer</code>, <code>SmtpSenderAddress</code> and<code>SmtpReceiverAddress</code> " +
             "have been configured.")]
-        public bool? EmailOnSuccess { get; set; }
+        public bool? NotifyOnSuccess { get; set; }
 
         [SettingsValue(Description = "This value replaces the computer machine name reported in emails.")]
         public string? ComputerName { get; set; }
+
+        [SettingsValue(
+            Description = "Path to external script or program to run for notifications. " +
+            "Supported extensions: <code>.ps1</code>, <code>.sh</code>, <code>.exe</code>, " +
+            "<code>.bat</code>, <code>.cmd</code> (Windows only).")]
+        public string? Script { get; set; }
+
+        [SettingsValue(
+            Description = "Parameters for the notification script. May include tokens like " +
+            "<code>{EventType}</code> (created, success, success-with-errors, failure, cancel, test), " +
+            "<code>{RenewalId}</code>, <code>{FriendlyName}</code>, <code>{Errors}</code>, " +
+            "<code>{Log}</code>, and <code>{vault://json/key}</code> for secrets.")]
+        public string? ScriptParameters { get; set; }
     }
 }
