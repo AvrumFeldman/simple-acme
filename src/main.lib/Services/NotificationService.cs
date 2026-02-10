@@ -8,7 +8,11 @@ using System.Threading.Tasks;
 
 namespace PKISharp.WACS.Services
 {
-    internal class NotificationService
+    internal class NotificationService(
+        ILifetimeScope scope,
+        ILogService log,
+        IPluginService pluginService,
+        ISettings settings)
     {
         private readonly ILogService _log = log;
         private readonly IEnumerable<INotificationTarget> _targets = pluginService.

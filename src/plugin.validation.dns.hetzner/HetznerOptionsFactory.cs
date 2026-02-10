@@ -7,45 +7,38 @@ using System.Threading.Tasks;
 
 namespace PKISharp.WACS.Plugins.ValidationPlugins.Dns
 {
-    public class HetznerOptionsFactory : PluginOptionsFactory<HetznerOptions>
+    public class HetznerOptionsFactory(ArgumentsInputService arguments) : PluginOptionsFactory<HetznerOptions>
     {
-        private readonly ArgumentsInputService _arguments;
-
-        public HetznerOptionsFactory(ArgumentsInputService arguments) => _arguments = arguments;
-
-        private ArgumentResult<ProtectedString?> ApiKey => _arguments
+        private ArgumentResult<ProtectedString?> ApiKey => arguments
             .GetProtectedString<HetznerArguments>(a => a.HetznerApiToken)
             .Required();
 
-        private ArgumentResult<bool> UseHetznerCloud => _arguments
-            .GetBool<HetznerArguments>(a => a.UseHetznerCloud)
-            .WithDefault(false);
-
-        private ArgumentResult<string?> ZoneId => _arguments
+        private ArgumentResult<string?> ZoneId => arguments
             .GetString<HetznerArguments>(a => a.HetznerZoneId)
             .DefaultAsNull();
 
         public override async Task<HetznerOptions?> Aquire(IInputService inputService, RunLevel runLevel)
-            => new HetznerOptions
+        {
+            return new HetznerOptions
             {
                 ApiToken = await ApiKey.Interactive(inputService).WithLabel("Hetzner API Token").GetValue(),
-                ZoneId = await ZoneId.Interactive(inputService).WithLabel("Hetzner Zone Id").GetValue(),
-                UseHetznerCloud = await UseHetznerCloud.Interactive(inputService).WithLabel("Use Hetzner Cloud API").GetValue()!
+                ZoneId = await ZoneId.Interactive(inputService).WithLabel("Hetzner Zone Id").GetValue()
             };
+        }
 
         public override async Task<HetznerOptions?> Default()
-            => new HetznerOptions
+        {
+            return new HetznerOptions
             {
                 ApiToken = await ApiKey.GetValue(),
-                ZoneId = await ZoneId.GetValue(),
-                UseHetznerCloud = await UseHetznerCloud.GetValue()
+                ZoneId = await ZoneId.GetValue()
             };
+        }
 
         public override IEnumerable<(CommandLineAttribute, object?)> Describe(HetznerOptions options)
         {
             yield return (ApiKey.Meta, options.ApiToken);
             yield return (ZoneId.Meta, options.ZoneId);
-            yield return (UseHetznerCloud.Meta, options.UseHetznerCloud);
         }
     }
 }

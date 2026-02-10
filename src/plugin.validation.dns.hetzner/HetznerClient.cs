@@ -1,6 +1,8 @@
+using PKISharp.WACS.Plugins.ValidationPlugins.Dns.Models;
+using PKISharp.WACS.Services;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -8,28 +10,25 @@ using System.Net.Http.Json;
 using System.Net.Mime;
 using System.Threading.Tasks;
 
-using PKISharp.WACS.Services;
-using PKISharp.WACS.Plugins.ValidationPlugins.Dns.Internal.Models;
-using PKISharp.WACS.Plugins.ValidationPlugins.Dns.Internal.Models.HetznerDns;
+[assembly: SuppressMessage("Style", "IDE1006:Naming Styles", Justification = "<Pending>")]
 
-namespace PKISharp.WACS.Plugins.ValidationPlugins.Dns.Internal;
+namespace PKISharp.WACS.Plugins.ValidationPlugins.Dns;
 
-internal sealed class HetznerDnsClient : IHetznerClient, IDisposable
+public sealed class HetznerClient : IDisposable
 {
-    private static readonly Uri BASE_ADDRESS = new Uri("https://dns.hetzner.com/api/v1/");
+    private static readonly Uri BASE_ADDRESS = new("https://dns.hetzner.com/api/v1/");
 
-    private ILogService _log;
+    private readonly ILogService _log;
 
-    private HttpClient _httpClient;
+    private readonly HttpClient _httpClient;
 
-    public HetznerDnsClient(string apiToken, ILogService logService, IProxyService proxyService)
+    public HetznerClient(HttpClient client, string apiToken, ILogService logService)
     {
         _log = logService;
-
-        _httpClient = proxyService.GetHttpClient();
-        _httpClient.BaseAddress = BASE_ADDRESS;
-        _httpClient.DefaultRequestHeaders.Add("Auth-API-Token", apiToken);
-        _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+        client.BaseAddress = BASE_ADDRESS;
+        client.DefaultRequestHeaders.Add("Auth-API-Token", apiToken);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+        _httpClient = client;
     }
 
     public void Dispose()
@@ -37,19 +36,19 @@ internal sealed class HetznerDnsClient : IHetznerClient, IDisposable
         _httpClient.Dispose();
     }
 
-    public async Task<IReadOnlyCollection<HetznerZone>> GetAllActiveZonesAsync()
+    public async Task<ICollection<Zone>> GetAllZonesAsync()
     {
         var zonesResponse = await _httpClient.GetFromJsonAsync<ZonesResponse>("zones").ConfigureAwait(false);
         if (zonesResponse is null)
         {
             _log.Warning("No zones found in Hetzner DNS");
-            return Array.Empty<HetznerZone>();
+            return [];
         }
 
         // Is only one page returned?
         if (zonesResponse.Meta.Pagination.LastPage == zonesResponse.Meta.Pagination.Page)
         {
-            return zonesResponse.Zones.Where(x => x.Paused is false).Select(z => new HetznerZone(z.Id, z.Name)).ToImmutableArray();
+            return zonesResponse.Zones;
         }
 
         var allZones = new List<Zone>();
@@ -64,16 +63,16 @@ internal sealed class HetznerDnsClient : IHetznerClient, IDisposable
             if (zonesResponse is null)
             {
                 _log.Warning($"No zones found on page {nextPage} in Hetzner DNS");
-                return allZones.Where(x => x.Paused is false).Select(z => new HetznerZone(z.Id, z.Name)).ToImmutableArray();
+                return allZones;
             }
 
             allZones.AddRange(zonesResponse.Zones);
         }
 
-        return allZones.Where(x => x.Paused is false).Select(z => new HetznerZone(z.Id, z.Name)).ToImmutableArray();
+        return allZones;
     }
 
-    public async Task<HetznerZone?> GetZoneAsync(string zoneId)
+    public async Task<Zone?> GetZoneAsync(string zoneId)
     {
         var zoneResponse = await _httpClient.GetFromJsonAsync<Zone>($"zones/{zoneId}").ConfigureAwait(false);
         if (zoneResponse is null)
@@ -82,17 +81,17 @@ internal sealed class HetznerDnsClient : IHetznerClient, IDisposable
             return null;
         }
 
-        return new HetznerZone(zoneResponse.Id, zoneResponse.Name);
+        return zoneResponse;
     }
 
-    public async Task<bool> CreateRecordAsync(HetznerRecord record)
+    public async Task<bool> CreateRecordAsync(Record record)
     {
         using var response = await _httpClient.PostAsJsonAsync("records", record).ConfigureAwait(false);
 
         return response.IsSuccessStatusCode;
     }
 
-    public async Task DeleteRecordAsync(HetznerRecord record)
+    public async Task DeleteRecordAsync(Record record)
     {
         var recordSet = await _httpClient.GetFromJsonAsync<RecordResultSet>($"records?zone_id={record.zone_id}");
         if (recordSet is null || recordSet.records is null || recordSet.records.Length == 0)
